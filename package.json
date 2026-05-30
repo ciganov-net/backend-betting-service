@@ -38,6 +38,8 @@
 		"@prisma/adapter-pg": "^7.8.0",
 		"@prisma/client": "^7.8.0",
 		"@willsoto/nestjs-prometheus": "^6.1.0",
+		"amqp-connection-manager": "^5.0.0",
+		"amqplib": "^2.0.1",
 		"cross-env": "^10.1.0",
 		"nestjs-pino": "^4.6.1",
 		"pino": "^10.3.1",

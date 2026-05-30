@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  betting-service:
+    container_name: betting-service
+    image: ciganov-net/betting-service:dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - .env.production.local
+    expose:
+      - '9106'
+    volumes:
+      - ../logs/betting:/var/log/services/betting
+    networks:
+      - ciganov-net
+
+networks:
+  ciganov-net:
+    external: true
