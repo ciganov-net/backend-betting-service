@@ -4,6 +4,7 @@ import { LoggerModule } from 'nestjs-pino'
 
 import { PrismaModule } from '@/infrastructure/prisma/prisma.module'
 import { RabbitmqModule } from '@/infrastructure/rabbitmq/rabbitmq.module'
+import { RedisModule } from '@/infrastructure/redis/redis.module'
 import { BetModule } from '@/modules/bet/bet.module'
 import { ObservabilityModule } from '@/observability/observability.module'
 
@@ -35,6 +36,7 @@ import { ObservabilityModule } from '@/observability/observability.module'
 		}),
 		ObservabilityModule,
 		PrismaModule,
+		RedisModule,
 		RabbitmqModule,
 		BetModule
 	]
