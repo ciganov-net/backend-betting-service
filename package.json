@@ -41,6 +41,7 @@
 		"amqp-connection-manager": "^5.0.0",
 		"amqplib": "^2.0.1",
 		"cross-env": "^10.1.0",
+		"ioredis": "^5.11.0",
 		"nestjs-pino": "^4.6.1",
 		"pino": "^10.3.1",
 		"pino-http": "^11.0.0",
