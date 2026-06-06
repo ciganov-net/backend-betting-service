@@ -14,6 +14,7 @@ import { lastValueFrom } from 'rxjs'
 import { BalanceClientGrpc } from '@/infrastructure/grpc/clients/balance/balance.grpc'
 import { OddsClientGrpc } from '@/infrastructure/grpc/clients/odds/odds.grpc'
 import { PrismaService } from '@/infrastructure/prisma/prisma.service'
+import { RedisService } from '@/infrastructure/redis/redis.service'
 
 @Injectable()
 export class BetService {
@@ -21,7 +22,8 @@ export class BetService {
 		private readonly prismaService: PrismaService,
 		private readonly balanceClient: BalanceClientGrpc,
 		private readonly oddsClient: OddsClientGrpc,
-		private readonly logger: PinoLogger
+		private readonly logger: PinoLogger,
+		private readonly redisService: RedisService
 	) {
 		this.logger.setContext(BetService.name)
 	}
@@ -35,7 +37,17 @@ export class BetService {
 			})
 		)
 
-		if (validateResponse.coefficient !== coefficient)
+		const redisCoefficient = await this.redisService.hget(`event:coefficients:${validateResponse.eventId}`, outcomeId)
+
+		if (!redisCoefficient)
+			throw new RpcException({
+				code: RpcStatus.NOT_FOUND,
+				details: 'Coefficient is not found'
+			}) 
+		
+		const actualCoefficient = parseFloat(redisCoefficient)
+
+		if ((actualCoefficient - coefficient) > 0.0001)
 			throw new RpcException({
 				code: RpcStatus.INVALID_ARGUMENT,
 				details: 'Coefficient is not valid'
@@ -71,6 +83,26 @@ export class BetService {
 				status: 'PENDING'
 			}
 		})
+
+		await this.redisService.hincrby(`event:amounts:${validateResponse.eventId}`, outcomeId, amount)
+
+		const allAmounts = await this.redisService.hgetall(`event:amounts:${validateResponse.eventId}`)
+		const redisOutcomeIds = Object.keys(allAmounts)
+		let fullAmount = 0
+
+		for (const redisOutcomeId of redisOutcomeIds) {
+			fullAmount += parseFloat(allAmounts[redisOutcomeId])
+		}
+
+		if (fullAmount >= 50000) {
+			for (const redisOutcomeId of redisOutcomeIds) {
+				const currentAmount = parseFloat(allAmounts[redisOutcomeId])
+				if (currentAmount >= 5000) {
+					const newCoefficient = 0.95/(currentAmount/fullAmount)
+					await this.redisService.hset(`event:coefficients:${validateResponse.eventId}`, redisOutcomeId, Math.min(50.00, Math.max(0.01, newCoefficient)))
+				}
+			}
+		}
 
 		return {
 			ok: true
