@@ -1,6 +1,8 @@
 import { OddFinishedEvent } from '@ciganov/contracts'
 import { TransactionType } from '@ciganov/contracts/dist/gen/balance'
 import type {
+	GetBetCountByEventRequest,
+	GetBetCountByEventResponse,
 	PlaceBetRequest,
 	PlaceBetResponse
 } from '@ciganov/contracts/dist/gen/betting'
@@ -28,6 +30,18 @@ export class BetService {
 		this.logger.setContext(BetService.name)
 	}
 
+	async getBetCount(
+		data: GetBetCountByEventRequest
+	): Promise<GetBetCountByEventResponse> {
+		const { eventId } = data
+		const count = await this.prismaService.bet.count({
+			where: {
+				eventId
+			}
+		})
+		return { count }
+	}
+
 	async placeBet(data: PlaceBetRequest): Promise<PlaceBetResponse> {
 		const { amount, coefficient, outcomeId, userId } = data
 
@@ -37,17 +51,20 @@ export class BetService {
 			})
 		)
 
-		const redisCoefficient = await this.redisService.hget(`event:coefficients:${validateResponse.eventId}`, outcomeId)
+		const redisCoefficient = await this.redisService.hget(
+			`event:coefficients:${validateResponse.eventId}`,
+			outcomeId
+		)
 
 		if (!redisCoefficient)
 			throw new RpcException({
 				code: RpcStatus.NOT_FOUND,
 				details: 'Coefficient is not found'
-			}) 
-		
+			})
+
 		const actualCoefficient = parseFloat(redisCoefficient)
 
-		if ((actualCoefficient - coefficient) > 0.0001)
+		if (actualCoefficient - coefficient > 0.0001)
 			throw new RpcException({
 				code: RpcStatus.INVALID_ARGUMENT,
 				details: 'Coefficient is not valid'
@@ -84,9 +101,15 @@ export class BetService {
 			}
 		})
 
-		await this.redisService.hincrby(`event:amounts:${validateResponse.eventId}`, outcomeId, amount)
+		await this.redisService.hincrby(
+			`event:amounts:${validateResponse.eventId}`,
+			outcomeId,
+			amount
+		)
 
-		const allAmounts = await this.redisService.hgetall(`event:amounts:${validateResponse.eventId}`)
+		const allAmounts = await this.redisService.hgetall(
+			`event:amounts:${validateResponse.eventId}`
+		)
 		const redisOutcomeIds = Object.keys(allAmounts)
 		let fullAmount = 0
 
@@ -98,8 +121,12 @@ export class BetService {
 			for (const redisOutcomeId of redisOutcomeIds) {
 				const currentAmount = parseFloat(allAmounts[redisOutcomeId])
 				if (currentAmount >= 5000) {
-					const newCoefficient = 0.95/(currentAmount/fullAmount)
-					await this.redisService.hset(`event:coefficients:${validateResponse.eventId}`, redisOutcomeId, Math.min(50.00, Math.max(0.01, newCoefficient)))
+					const newCoefficient = 0.95 / (currentAmount / fullAmount)
+					await this.redisService.hset(
+						`event:coefficients:${validateResponse.eventId}`,
+						redisOutcomeId,
+						Math.min(50.0, Math.max(0.01, newCoefficient))
+					)
 				}
 			}
 		}

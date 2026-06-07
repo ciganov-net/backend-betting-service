@@ -1,5 +1,7 @@
 import type { OddFinishedEvent } from '@ciganov/contracts'
 import type {
+	GetBetCountByEventRequest,
+	GetBetCountByEventResponse,
 	PlaceBetRequest,
 	PlaceBetResponse
 } from '@ciganov/contracts/dist/gen/betting'
@@ -39,6 +41,13 @@ export class BetController {
 	@GrpcMethod('BettingService', 'PlaceBet')
 	async placeBet(data: PlaceBetRequest): Promise<PlaceBetResponse> {
 		return this.betService.placeBet(data)
+	}
+
+	@GrpcMethod('BettingService', 'GetBetCountByEvent')
+	async getCount(
+		data: GetBetCountByEventRequest
+	): Promise<GetBetCountByEventResponse> {
+		return this.betService.getBetCount(data)
 	}
 
 	@EventPattern('odd.finished.request')
