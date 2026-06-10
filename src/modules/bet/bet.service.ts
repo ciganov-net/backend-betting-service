@@ -1,4 +1,5 @@
 import { OddFinishedEvent } from '@ciganov/contracts'
+import type { OddResolvedEvent } from '@ciganov/contracts/dist/events'
 import { TransactionType } from '@ciganov/contracts/dist/gen/balance'
 import type {
 	GetBetCountByEventRequest,
@@ -7,8 +8,8 @@ import type {
 	PlaceBetResponse
 } from '@ciganov/contracts/dist/gen/betting'
 import { RpcStatus } from '@ciganov/core'
-import { Injectable } from '@nestjs/common'
-import { RpcException } from '@nestjs/microservices'
+import { Inject, Injectable } from '@nestjs/common'
+import { ClientProxy, RpcException } from '@nestjs/microservices'
 import { Bet } from '@prisma/generated/client'
 import { PinoLogger } from 'nestjs-pino'
 import { lastValueFrom } from 'rxjs'
@@ -24,6 +25,7 @@ export class BetService {
 		private readonly prismaService: PrismaService,
 		private readonly balanceClient: BalanceClientGrpc,
 		private readonly oddsClient: OddsClientGrpc,
+		@Inject('GATEWAY_CLIENT') private readonly client: ClientProxy,
 		private readonly logger: PinoLogger,
 		private readonly redisService: RedisService
 	) {
@@ -138,7 +140,6 @@ export class BetService {
 
 	async resolveBets(data: OddFinishedEvent) {
 		const { eventId, status, winningOutcomes } = data
-
 		const bets = await this.prismaService.bet.findMany({
 			where: {
 				eventId,
@@ -200,6 +201,11 @@ export class BetService {
 				actualPayout: bet.potentialPayout.toNumber()
 			}
 		})
+		const wsData: OddResolvedEvent = {
+			status: 'WON',
+			userId: bet.userId
+		}
+		this.client.emit('bet.resolved', wsData)
 		return true
 	}
 
@@ -231,6 +237,11 @@ export class BetService {
 				actualPayout: -payout
 			}
 		})
+		const wsData: OddResolvedEvent = {
+			status: 'LOSE',
+			userId: bet.userId
+		}
+		this.client.emit('bet.resolved', wsData)
 		return true
 	}
 
@@ -262,6 +273,11 @@ export class BetService {
 				actualPayout: 0
 			}
 		})
+		const wsData: OddResolvedEvent = {
+			status: 'CANCELLED',
+			userId: bet.userId
+		}
+		this.client.emit('bet.resolved', wsData)
 		return true
 	}
 }

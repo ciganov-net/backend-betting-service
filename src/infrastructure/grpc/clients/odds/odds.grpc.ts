@@ -1,5 +1,6 @@
 import {
 	OddServiceClient,
+	SwitchEventLiveStateRequest,
 	ValidateOutcomeRequest,
 	ValidateOutcomeResponse
 } from '@ciganov/contracts/dist/gen/odd'
@@ -19,5 +20,9 @@ export class OddsClientGrpc implements OnModuleInit {
 
 	public validate(data: ValidateOutcomeRequest) {
 		return this.oddsService.validateOutcome(data)
+	}
+
+	public switchLiveState(data: SwitchEventLiveStateRequest) {
+		return this.oddsService.switchEventLiveState(data)
 	}
 }
