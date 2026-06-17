@@ -316,9 +316,9 @@
   integrity sha512-B/XlCaFIP8LOwzo+bz5uFzATYokcwCKQcghqnlfwSmM5eX/qTkvDBnDPs+gXtX/RyjxJ4DRikECcPJbyALA8FA==
 
 "@ciganov/contracts@^1.1.8":
-  version "1.1.29"
-  resolved "https://registry.yarnpkg.com/@ciganov/contracts/-/contracts-1.1.29.tgz#b1e6fda369773ab6bf6fdb36436481da25e46745"
-  integrity sha512-GUKxTrNy0nC5vTSZlaqk7xU4bUC12hELaztm+vDugCniAXevQJG6LhOlFL9i+F0smXVJLnc5jy4JP20qvC1qEQ==
+  version "1.1.30"
+  resolved "https://registry.yarnpkg.com/@ciganov/contracts/-/contracts-1.1.30.tgz#ba5557383cd7163fc6b8677ad9066e4b2c1a47f9"
+  integrity sha512-AjZv8DPfobvFeOso3na2G7WPJDDMGQRb+jt4AUi9qt0nHxxmW8p7/ScTpBVoy//nvIWyUBc2zjH8f/rOd0MpvA==
   dependencies:
     "@nestjs/microservices" "^11.1.11"
     cpy-cli "^7.0.0"

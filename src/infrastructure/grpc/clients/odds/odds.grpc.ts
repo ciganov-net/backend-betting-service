@@ -1,4 +1,5 @@
 import {
+	CloseEventRequest,
 	OddServiceClient,
 	SwitchEventLiveStateRequest,
 	ValidateOutcomeRequest,
@@ -24,5 +25,9 @@ export class OddsClientGrpc implements OnModuleInit {
 
 	public switchLiveState(data: SwitchEventLiveStateRequest) {
 		return this.oddsService.switchEventLiveState(data)
+	}
+
+	public closeEvent(data: CloseEventRequest) {
+		return this.oddsService.closeEvent(data)
 	}
 }

@@ -171,7 +171,7 @@ export class BetService {
 		})
 
 		if (bets.length === 0) {
-			//TODO: close the odd
+			this.oddsClient.closeEvent({ eventId })
 			this.logger.info(`No pending bets found for event ${eventId}`)
 			return
 		}
@@ -225,6 +225,7 @@ export class BetService {
 				actualPayout: bet.potentialPayout.toNumber()
 			}
 		})
+		this.oddsClient.closeEvent({ eventId: bet.eventId })
 		const wsData: OddResolvedEvent = {
 			status: 'WON',
 			userId: bet.userId
@@ -261,6 +262,7 @@ export class BetService {
 				actualPayout: -payout
 			}
 		})
+		this.oddsClient.closeEvent({ eventId: bet.eventId })
 		const wsData: OddResolvedEvent = {
 			status: 'LOSE',
 			userId: bet.userId
@@ -297,6 +299,7 @@ export class BetService {
 				actualPayout: 0
 			}
 		})
+		this.oddsClient.closeEvent({ eventId: bet.eventId })
 		const wsData: OddResolvedEvent = {
 			status: 'CANCELLED',
 			userId: bet.userId
