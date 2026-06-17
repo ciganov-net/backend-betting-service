@@ -1,13 +1,16 @@
 import { OddFinishedEvent } from '@ciganov/contracts'
 import type { OddResolvedEvent } from '@ciganov/contracts/dist/events'
 import { TransactionType } from '@ciganov/contracts/dist/gen/balance'
-import type {
-	GetBetCountByEventRequest,
-	GetBetCountByEventResponse,
-	PlaceBetRequest,
-	PlaceBetResponse
+import {
+	BetStatus,
+	type GetBetCountByEventRequest,
+	type GetBetCountByEventResponse,
+	type GetUserBetsRequest,
+	type GetUserBetsResponse,
+	type PlaceBetRequest,
+	type PlaceBetResponse
 } from '@ciganov/contracts/dist/gen/betting'
-import { RpcStatus } from '@ciganov/core'
+import { convertEnum, dateToProto, RpcStatus } from '@ciganov/core'
 import { Inject, Injectable } from '@nestjs/common'
 import { ClientProxy, RpcException } from '@nestjs/microservices'
 import { Bet } from '@prisma/generated/client'
@@ -57,12 +60,6 @@ export class BetService {
 			`event:coefficients:${validateResponse.eventId}`,
 			outcomeId
 		)
-
-		if (!redisCoefficient)
-			throw new RpcException({
-				code: RpcStatus.NOT_FOUND,
-				details: 'Coefficient is not found'
-			})
 
 		const actualCoefficient = parseFloat(redisCoefficient)
 
@@ -138,6 +135,32 @@ export class BetService {
 		}
 	}
 
+	async getUserBets(data: GetUserBetsRequest): Promise<GetUserBetsResponse> {
+		const { userId } = data
+		const bets = await this.prismaService.bet.findMany({
+			where: {
+				userId
+			}
+		})
+		return {
+			bets: bets.map(value => ({
+				id: value.id,
+				amount: Number(value.amount),
+				createdAt: dateToProto(value.createdAt),
+				updatedAt: dateToProto(value.updatedAt),
+				eventId: value.eventId,
+				eventName: value.eventName,
+				outcomeId: value.outcomeId,
+				outcomeName: value.outcomeName,
+				potentialPayout: Number(value.potentialPayout),
+				status: convertEnum(BetStatus, value.status),
+				totalCoefficient: Number(value.totalCoefficient),
+				userId: value.userId,
+				actualPayout: Number(value.actualPayout)
+			}))
+		}
+	}
+
 	async resolveBets(data: OddFinishedEvent) {
 		const { eventId, status, winningOutcomes } = data
 		const bets = await this.prismaService.bet.findMany({
@@ -148,6 +171,7 @@ export class BetService {
 		})
 
 		if (bets.length === 0) {
+			//TODO: close the odd
 			this.logger.info(`No pending bets found for event ${eventId}`)
 			return
 		}
