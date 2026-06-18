@@ -116,11 +116,11 @@ export class BetService {
 			fullAmount += parseFloat(allAmounts[redisOutcomeId])
 		}
 
-		if (fullAmount >= 50000) {
+		if (fullAmount >= 5000) {
 			for (const redisOutcomeId of redisOutcomeIds) {
 				const currentAmount = parseFloat(allAmounts[redisOutcomeId])
-				if (currentAmount >= 5000) {
-					const newCoefficient = 0.95 / (currentAmount / fullAmount)
+				if (currentAmount >= 2500) {
+					const newCoefficient = 0.8 / (currentAmount / fullAmount)
 					await this.redisService.hset(
 						`event:coefficients:${validateResponse.eventId}`,
 						redisOutcomeId,
