@@ -140,6 +140,9 @@ export class BetService {
 		const bets = await this.prismaService.bet.findMany({
 			where: {
 				userId
+			},
+			orderBy: {
+				status: 'asc'
 			}
 		})
 		return {
